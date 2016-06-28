@@ -1,12 +1,11 @@
 //table2excel.js
 ;(function ( $, window, document, undefined ) {
     var pluginName = "table2excel",
-
     defaults = {
         exclude: ".noExl",
-                name: "Table2Excel"
+        name: "Table2Excel"
     };
-
+    
     // The actual plugin constructor
     function Plugin ( element, options ) {
             this.element = element;
@@ -14,7 +13,6 @@
             // more objects, storing the result in the first object. The first object
             // is generally empty as we don't want to alter the default options for
             // future instances of the plugin
-            //
             this.settings = $.extend( {}, defaults, options );
             this._defaults = defaults;
             this._name = pluginName;
@@ -23,10 +21,12 @@
 
     Plugin.prototype = {
         init: function () {
-            var e = this;
-
-			var utf8Heading = "<meta http-equiv=\"content-type\" content=\"application/vnd.ms-excel; charset=UTF-8\">";
+			var e = this;
+            
+            var utf8Heading = "<meta http-equiv=\"content-type\" content=\"application/vnd.ms-excel; charset=UTF-8\">";
+            
             e.template = {
+				head: "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">" + utf8Heading + "<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>",
                 sheet: {
                     head: "<x:ExcelWorksheet><x:Name>",
                     tail: "</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>"
@@ -38,9 +38,9 @@
                 },
                 foot: "</body></html>"
             };
-
+			
             e.tableRows = [];
-
+			
             // get contents of table except for exclude
             $(e.element).each( function(i,o) {
                 var tempRows = "";
@@ -59,13 +59,13 @@
                 });
                 e.tableRows.push(tempRows);
             });
-
+            
             e.tableToExcel(e.tableRows, e.settings.name, e.settings.sheetName);
         },
-
+        
         tableToExcel: function (table, name, sheetName) {
             var e = this, fullTemplate="", i, link, a;
-
+			
             e.uri = "data:application/vnd.ms-excel;base64,";
             e.base64 = function (s) {
                 return window.btoa(unescape(encodeURIComponent(s)));
@@ -75,42 +75,41 @@
                     return c[p];
                 });
             };
-
+			
             sheetName = typeof sheetName === "undefined" ? "Sheet" : sheetName;
-
+			
             e.ctx = {
                 worksheet: name || "Worksheet",
                 table: table,
                 sheetName: sheetName,
             };
-
+			
             fullTemplate= e.template.head;
-
+			
             if ( $.isArray(table) ) {
                 for (i in table) {
                       //fullTemplate += e.template.sheet.head + "{worksheet" + i + "}" + e.template.sheet.tail;
                       fullTemplate += e.template.sheet.head + sheetName + i + e.template.sheet.tail;
                 }
             }
-
+			
             fullTemplate += e.template.mid;
-
+			
             if ( $.isArray(table) ) {
                 for (i in table) {
                     fullTemplate += e.template.table.head + "{table" + i + "}" + e.template.table.tail;
                 }
             }
-
+			
             fullTemplate += e.template.foot;
-
+			
             for (i in table) {
                 e.ctx["table" + i] = table[i];
             }
             delete e.ctx.table;
-
-	    var isIE = /*@cc_on!@*/false || !!document.documentMode; // this works with IE10 and IE11 both :)
-	    if (isIE)
-            {
+			
+	    	var isIE = /*@cc_on!@*/false || !!document.documentMode; // this works with IE10 and IE11 both :)
+	    	if (isIE) {
                 if (typeof Blob !== "undefined") {
                     //use blobs if we can
                     fullTemplate = e.format(fullTemplate, e.ctx); // with this, works with IE
@@ -127,7 +126,6 @@
                     txtArea1.focus();
                     sa = txtArea1.document.execCommand("SaveAs", true, getFileName(e.settings) );
                 }
-
             } else {
                 link = e.uri + e.base64(e.format(fullTemplate, e.ctx));
                 a = document.createElement("a");
@@ -135,16 +133,14 @@
                 a.href = link;
 
                 document.body.appendChild(a);
-
                 a.click();
-
                 document.body.removeChild(a);
             }
 
             return true;
         }
     };
-
+    
     function getFileName(settings) {
 		return ( settings.filename ? settings.filename : "table2excel" );
     }
