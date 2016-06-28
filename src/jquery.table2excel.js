@@ -27,7 +27,6 @@
 
 			var utf8Heading = "<meta http-equiv=\"content-type\" content=\"application/vnd.ms-excel; charset=UTF-8\">";
             e.template = {
-				head: "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:x=\"urn:schemas-microsoft-com:office:excel\" xmlns=\"http://www.w3.org/TR/REC-html40\">" + utf8Heading + "<head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>",
                 sheet: {
                     head: "<x:ExcelWorksheet><x:Name>",
                     tail: "</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>"
@@ -47,7 +46,7 @@
                 var tempRows = "";
                 $(o).find("tr").not(e.settings.exclude).each(function (i,o) {
                     tempRows += "<tr>";
-                    $(p).find("td").not(e.settings.exclude).each(function (i,q) {
+                    $(o).find("td").not(e.settings.exclude).each(function (i,q) {
                         var flag = $(q).find(e.settings.exclude) // does this <td> have something with an exclude class
                         if(flag.length >= 1) {
                             tempRows += "<td> </td>" // exclude it!!
@@ -109,10 +108,12 @@
             }
             delete e.ctx.table;
 
-            if (typeof msie !== "undefined" && msie > 0 || !!navigator.userAgent.match(/Trident.*rv\:11\./))      // If Internet Explorer
+	    var isIE = /*@cc_on!@*/false || !!document.documentMode; // this works with IE10 and IE11 both :)
+	    if (isIE)
             {
                 if (typeof Blob !== "undefined") {
                     //use blobs if we can
+                    fullTemplate = e.format(fullTemplate, e.ctx); // with this, works with IE
                     fullTemplate = [fullTemplate];
                     //convert to array
                     var blob1 = new Blob(fullTemplate, { type: "text/html" });
